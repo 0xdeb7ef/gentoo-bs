@@ -1,0 +1,1 @@
+files/zed-bin-preview.ebuild
