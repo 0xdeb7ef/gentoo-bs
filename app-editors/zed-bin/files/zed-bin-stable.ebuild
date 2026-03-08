@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit desktop pax-utils xdg
+inherit desktop xdg
 
 DESCRIPTION="A high-performance, multiplayer code editor"
 HOMEPAGE="https://zed.dev https://github.com/zed-industries/zed"
@@ -35,7 +35,14 @@ RESTRICT="mirror strip bindist"
 
 RDEPEND="!app-editors/zed"
 
-QA_PREBUILT="*"
+src_prepare() {
+	default
+
+	sed "s|^MimeType=|MimeType=inode/directory;|g;\
+		s|^Exec=zed|Exec=env ZED_UPDATE_EXPLANATION=\"Please use Portage to update Zed.\" zed|g" \
+		"${S}/share/applications/dev.zed.Zed.desktop" \
+		> "${T}/dev.zed.Zed.desktop" || die
+}
 
 src_install() {
 	if use amd64 || use arm64; then
@@ -44,29 +51,14 @@ src_install() {
 		die "Zed only supports amd64 and arm64"
 	fi
 
-	if [ -f "bin/zed" ]; then
-		BIN="zed"
-	else
-		# support for versions before 0.139.x
-		BIN="cli"
-	fi
-
-	# Install
-	pax-mark m bin/${BIN}
-	pax-mark m libexec/zed-editor
-
 	insinto "/opt/${PN}"
 	doins -r bin lib libexec || die
-	fperms +x "/opt/${PN}/bin/${BIN}" "/opt/${PN}/libexec/zed-editor"
+	fperms +x "/opt/${PN}/bin/zed" "/opt/${PN}/libexec/zed-editor"
 
-	dosym -r "/opt/${PN}/bin/${BIN}" "usr/bin/zed"
+	dosym -r "/opt/${PN}/bin/zed" "usr/bin/zed"
 	dosym -r "/opt/${PN}/libexec/zed-editor" "usr/libexec/zed-editor"
 
 	dodoc licenses.md
-
-	sed "s|^Exec=zed|Exec=env ZED_UPDATE_EXPLANATION=\"Please use Portage to update Zed.\" zed|g" \
-		"${S}/share/applications/${PN%-bin}.desktop" \
-		> "${T}/dev.zed.Zed.desktop" || die
 
 	newicon -s 512 "share/icons/hicolor/512x512/apps/zed.png" zed.png
 	newicon -s 1024 "share/icons/hicolor/1024x1024/apps/zed.png" zed.png

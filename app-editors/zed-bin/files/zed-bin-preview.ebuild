@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit desktop pax-utils xdg
+inherit desktop xdg
 
 DESCRIPTION="A high-performance, multiplayer code editor"
 HOMEPAGE="https://zed.dev https://github.com/zed-industries/zed"
@@ -35,7 +35,16 @@ RESTRICT="mirror strip bindist"
 
 RDEPEND="!app-editors/zed"
 
-QA_PREBUILT="*"
+src_prepare() {
+	default
+
+	sed "s|^MimeType=|MimeType=inode/directory;|g;\
+		s|^TryExec=zed|TryExec=zed-preview|g;\
+		s|^Icon=zed|Icon=zed-preview|g;\
+		s|^Exec=zed|Exec=env ZED_UPDATE_EXPLANATION=\"Please use Portage to update Zed.\" zed-preview|g" \
+		"${S}/share/applications/dev.zed.Zed-Preview.desktop" \
+		> "${T}/dev.zed.Zed-Preview.desktop" || die
+}
 
 src_install() {
 	if use amd64 || use arm64; then
@@ -44,29 +53,14 @@ src_install() {
 		die "Zed only supports amd64 and arm64"
 	fi
 
-	if [ -f "bin/zed" ]; then
-		BIN="zed"
-	else
-		# support for versions before 0.139.x
-		BIN="cli"
-	fi
-
-	# Install
-	pax-mark m bin/${BIN}
-	pax-mark m libexec/zed-editor
-
 	insinto "/opt/${PN}-preview"
 	doins -r bin lib libexec || die
-	fperms +x "/opt/${PN}-preview/bin/${BIN}" "/opt/${PN}-preview/libexec/zed-editor"
+	fperms +x "/opt/${PN}-preview/bin/zed" "/opt/${PN}-preview/libexec/zed-editor"
 
-	dosym -r "/opt/${PN}-preview/bin/${BIN}" "usr/bin/zed-preview"
+	dosym -r "/opt/${PN}-preview/bin/zed" "usr/bin/zed-preview"
 	dosym -r "/opt/${PN}-preview/libexec/zed-editor" "usr/libexec/zed-editor-preview"
 
 	dodoc licenses.md
-
-	sed "s|^TryExec=zed|TryExec=zed-preview|g;s|^Icon=zed|Icon=zed-preview|g;s|^Exec=zed|Exec=env ZED_UPDATE_EXPLANATION=\"Please use Portage to update Zed.\" zed-preview|g" \
-		"${S}/share/applications/${PN%-bin}-preview.desktop" \
-		> "${T}/dev.zed.Zed-Preview.desktop" || die
 
 	newicon -s 512 "share/icons/hicolor/512x512/apps/zed.png" zed-preview.png
 	newicon -s 1024 "share/icons/hicolor/1024x1024/apps/zed.png" zed-preview.png

@@ -1,1 +1,0 @@
-files/zed-bin-stable.ebuild
