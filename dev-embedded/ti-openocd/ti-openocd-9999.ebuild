@@ -12,7 +12,7 @@ else
 	MY_PV="ti-v${PV}"
 	MY_P="${PN}-${MY_PV}"
 	S="${WORKDIR}"/${MY_P}
-	KEYWORDS="amd64 ~arm x86"
+	KEYWORDS="~amd64 ~arm ~x86"
 	SRC_URI="https://github.com/TexasInstruments/${PN}/archive/refs/tags/${MY_PV}.zip"
 fi
 
